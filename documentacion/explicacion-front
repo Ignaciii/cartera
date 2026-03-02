@@ -1,0 +1,5 @@
+Herramienta,¿Qué hace en tu App?,Metáfora de Obra
+Tailwind, Da los estilos y la facha a los componentes.,"Los ladrillos, la pintura y los muebles."
+PostCSS,Procesa el Tailwind para que sea CSS legal.,La mezcladora de cemento.
+Vite,Levanta el servidor local y actualiza en tiempo real.,El capataz que hace que todo se mueva rápido.
+TypeScript,Te avisa si le pifiás a un tipo de dato (ej. precio).,El plano técnico que evita que se caiga la pared.
