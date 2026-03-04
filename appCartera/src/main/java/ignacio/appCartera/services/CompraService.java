@@ -17,12 +17,16 @@ public class CompraService {
         return compraRepository.save(compra);
     }
 
-    public List<Compra> obtenerCompras() {
-        return compraRepository.findAll();
+    public List<Compra> obtenerComprasActivas() {
+        return compraRepository.obtenerComprasEnCurso();
     }
 
     public Compra obtenerCompra(Long operacion) {
         return compraRepository.findById(operacion).orElse(null);
+    }
+
+    public List<Compra> obtenerComprasFinalizadas() {
+        return compraRepository.obtenerComprasFinalizadas();
     }
 
     public Compra editarCompra(Compra compra, Long id) {

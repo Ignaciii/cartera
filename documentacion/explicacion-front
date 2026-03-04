@@ -3,3 +3,48 @@ Tailwind, Da los estilos y la facha a los componentes.,"Los ladrillos, la pintur
 PostCSS,Procesa el Tailwind para que sea CSS legal.,La mezcladora de cemento.
 Vite,Levanta el servidor local y actualiza en tiempo real.,El capataz que hace que todo se mueva rápido.
 TypeScript,Te avisa si le pifiás a un tipo de dato (ej. precio).,El plano técnico que evita que se caiga la pared.
+
+1. El Contenedor: min-h-screen vs h-screen
+Qué hace: min-h-screen le dice al div que ocupe como mínimo el alto de la pantalla.
+
+Por qué: Si usás h-screen (como tenías antes), el fondo se corta apenas termina la pantalla. Si tenés 50 compras cargadas en el H2, al hacer scroll el fondo se pondría blanco. Con min-h-screen, el color de fondo te acompaña hasta el final de la lista.
+
+2. El Input de Búsqueda: max-w-4xl y mx-auto
+Qué hace: Limita el ancho del buscador y lo centra horizontalmente.
+
+Por qué: Un input que cruza toda la pantalla de punta a punta queda horrible y es difícil de leer.
+ Al centrarlo con mx-auto (margen automático a los costados), le das un punto focal prolijo a tu interfaz de inversiones.
+
+3. La Tabla: El secreto del Espaciado (px-6 py-4)
+Qué hace: Agrega padding horizontal (x) y vertical (y) a cada celda (th y td).
+
+Por qué: Viste que tu tabla se veía "amontonada". En las tablas, el espacio se da adentro de la celda.
+ Al darle py-4, hacés que la fila respire y que el usuario no confunda un renglón con otro al ver los precios de los bonos como el AL30.
+
+4. Alineación Estratégica: text-left vs text-right
+Esta es la decisión más "profesional" de todas:
+
+text-left (Ticker/Familia): El texto se lee de izquierda a derecha; es natural que esté alineado así.
+
+text-right (Precios/Totales): Regla de oro en sistemas contables. Al alinear los números a la derecha,
+ las comas y los puntos decimales coinciden verticalmente. Si tenés $10.00 y $1.000.000,00,
+  alineados a la derecha podés comparar magnitudes de un vistazo.
+
+text-center (Cantidad/Fecha): Para datos cortos que no necesitan comparación de magnitud,
+ el centro ayuda a equilibrar visualmente la columna.
+
+5. Tipografía de Datos: font-mono
+Qué hace: Usa una fuente donde todas las letras y números miden lo mismo de ancho.
+
+Por qué: En tu appCartera, los números son lo más importante. Con una fuente monoespaciada,
+ las columnas de números quedan perfectamente rectas, lo que facilita detectar errores en los montos o la cantidad de activos.
+
+6. Estética y "Facha": divide-y y odd:bg-
+divide-y: Crea una línea finita entre cada fila. Es mucho más moderno que el borde grueso de las tablas viejas de la facultad.
+
+odd:bg-slate-900 / even:bg-slate-800: Es el "efecto cebra". Ayuda al ojo a seguir un renglón largo desde el Ticker
+ hasta el botón de "Editar" sin perderse de fila.
+
+💡 El toque del "toLocaleString()"
+No es CSS, pero es clave: transforma un número feo como 107374182.4 en $107.374.182,40. Para un inversor joven que está aprendiendo,
+ ver los puntos de miles es la diferencia entre entender su patrimonio o marearse con los ceros.

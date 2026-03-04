@@ -32,9 +32,14 @@ public class CompraController {
 
     }
 
-    @GetMapping
+    @GetMapping("/activas")
     public List<Compra> getCompras() {
-        return compraService.obtenerCompras();
+        return compraService.obtenerComprasActivas();
+    }
+
+    @GetMapping("/finalizadas")
+    public List<Compra> getComprasFinalizadas() {
+        return compraService.obtenerComprasFinalizadas();
     }
 
     @PutMapping("{operacion}")
