@@ -1,27 +1,60 @@
-import { useEffect, useState } from "react"
+import {  useEffect, useState } from "react"
 import { CompraInterface } from "../interfaces/CompraInterface"
+import {InflacionInterface} from "../interfaces/InflacionInterface"
 import axios from "axios"
 
 export default function HistorialCompras() {
-  const [compras, setCompras] = useState<CompraInterface[]>([])
+  const [compras, setCompras] = useState<CompraInterface[]>([]);
+  const [inflacion, setInflacion] = useState<InflacionInterface[]>([])
+  const [cotizaciones, setCotizaciones] = useState<any[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+
+  
 
   useEffect(() => {
     const guardarCompras = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/cartera/activas");
-        setCompras(res.data)
+        const comprasGuardadas = await axios.get("http://localhost:8080/api/cartera/activas");
+        setCompras(comprasGuardadas.data)
+        const inflacionApi = await axios.get("https://api.argentinadatos.com/v1/finanzas/indices/inflacion")
+        setInflacion(inflacionApi.data)
+
+        //  vamos a ver si usamos esto al final
+        const cotizacionesGuardadas = await axios.get("http://localhost:8080/api/cartera/cotizaciones");
+        setCotizaciones(cotizacionesGuardadas.data)
+
+
       } catch (error) {
         console.error("Error al traer los datos:", error);
       }
     }
     guardarCompras();
   }, [])
+     
+  
+const manejarBusqueda = (evento: React.ChangeEvent<HTMLInputElement>) => {
+    setBusqueda(evento.target.value);
+  }
+
+const comprasFiltradas = compras.filter(
+  compra=> {
+    return compra.ticker.toLowerCase().includes(busqueda.toLowerCase()) || compra.familia.toLowerCase().includes(busqueda.toLowerCase())
+  }
+)
+
+const calcularInflacionAcumulada = (fechaCompra: string) => {
+    const mesesContados = inflacion.filter(inf =>  {return inf.fecha >= fechaCompra} ) 
+     
+    return mesesContados.reduce((acumulador,mes) => { return acumulador + mes.valor},0).toFixed(2);
+}
+
+
 
   return (
      
     <div className="bg-slate-900 min-h-screen justify-items-center  mx-auto overflow-hidden" >
                               
-      {compras.length == 0 ? (
+      {compras.length == 0? (
         
           <div className="grid justify-items border-4 border-blue-800/50 mt-60 rounded-xl p-10 " >
             <p className="pb-4 text-slate-100">Parece que no hay compras en curso che</p> 
@@ -40,7 +73,10 @@ export default function HistorialCompras() {
             className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-sky-500 outline-none transition-all placeholder:text-slate-500"
             placeholder="Buscar activo (AL30, GGAL...)"
             type="text"
-            name="search" 
+            name="search"
+            value={busqueda}
+            onChange={manejarBusqueda}
+             
             
             
           />
@@ -48,6 +84,7 @@ export default function HistorialCompras() {
 
         
         <div className="max-w-6xl mx-auto overflow-hidden rounded-xl border border-slate-800 shadow-2xl">
+        {comprasFiltradas.length == 0 ? <p className="text">Parece que no hay coincidencias che</p> :  
           <table className="w-full text-sm text-left">
             
             
@@ -69,10 +106,12 @@ export default function HistorialCompras() {
 
             {/* 5. Cuerpo con filas alternas */}
             <tbody className="divide-y divide-slate-800">
-              {compras.map((p) => (
+
+
+              {comprasFiltradas.map((p) => (
                 <tr key={p.operacion} className="bg-slate-900 hover:bg-slate-800/50 transition-colors">
                   
-                  <td className="px-6 py-4 font-bold text-sky-400">{p.ticker}</td>
+                  <td className="px-6 py-4 font-bold text-sky-400">{p.ticker.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-slate-400">{p.familia.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-center">{p.cantidad}</td>
                   <td className="px-6 py-4 text-right">${p.precioUnitario.toLocaleString()}</td>
@@ -80,9 +119,9 @@ export default function HistorialCompras() {
                     ${(p.cantidad * p.precioUnitario).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-center text-xs text-slate-500">{p.fechaCompra}</td>
+                  <td className="text-center font-semibold">{calcularInflacionAcumulada(p.fechaCompra)}%</td>
                   <td className="text-center font-semibold">{0}%</td>
-                  <td className="text-center font-semibold">{0}%</td>
-                  <td className="px-6 text-right font-semibold text-emerald-400">${(0).toLocaleString()}</td>
+                  <td className="px-6 text-right font-semibold text-emerald-400">${(cotizaciones.length).toLocaleString()}</td>
                   <td className="px-6 py-4 text-center">
                     <button className="bg-sky-600 hover:bg-emerald-600 text-white text-xs font-bold py-1 px-4 rounded-md transition-transform active:scale-110">
                       Editar
@@ -90,15 +129,15 @@ export default function HistorialCompras() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
+            </tbody> 
+          </table>}
         </div>
 
         <div className="flex justify-center mt-8">
           <button className="bg-sky-500 px-6 py-2 rounded-lg shadow-lg shadow-blue-600/50 duration-500 border border-slate-700 transition-all active:scale-80">
             Actualizar Cartera
           </button>
-        </div>
+        </div> 
       
     </div>)}</div>
   )

@@ -25,6 +25,7 @@ public class Compra {
     @Enumerated(EnumType.STRING)
     private EstadoOperacion estado;
 
+    private String sector;
     private String ticker;
     private Integer cantidad;
     private Double precioUnitario;

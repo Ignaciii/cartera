@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ignacio.appCartera.DTO.CompraDTO;
 import ignacio.appCartera.models.Compra;
 import ignacio.appCartera.repositories.CompraRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +13,18 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class CompraService {
     private final CompraRepository compraRepository;
+    private final IolTokenService iolTokenService;
+    private final InflacionService inflacionService;
 
     public Compra cargarCompra(Compra compra) {
         return compraRepository.save(compra);
     }
 
     public List<Compra> obtenerComprasActivas() {
-        return compraRepository.obtenerComprasEnCurso();
+
+        List<Compra> compras = compraRepository.obtenerComprasEnCurso();
+
+        return compras;
     }
 
     public Compra obtenerCompra(Long operacion) {
@@ -38,8 +44,10 @@ public class CompraService {
             compraEditar.setCantidad(compra.getCantidad());
             compraEditar.setFechaCompra(compra.getFechaCompra());
             compraEditar.setPrecioUnitario(compra.getPrecioUnitario());
+            compraEditar.setSector(compra.getSector());
             compraEditar = compraRepository.save(compraEditar);
         }
         return compraEditar;
     }
+
 }
