@@ -7,6 +7,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import ignacio.appCartera.DTO.CotizacionDTO;
 import ignacio.appCartera.models.IolToken;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -45,17 +46,24 @@ public class IolTokenService {
         if (tokenActual == null)
             autenticar();
 
-        // Ejemplo para acciones de BYMA
-        return webClient.get()
-                .uri("/api/v2/Titulos/Datos/bcvl/" + ticker + "/Cotizacion")
-                .header("Authorization", "Bearer " + tokenActual)
-                .retrieve()
-                .bodyToMono(Object.class) // Después podés crear un DTO más preciso
-                .map(res -> {
-                    // Acá tendrías que extraer el campo "ultimoPrecio" del JSON que manda IOL
-                    return 1234.50; // Valor de prueba
-                })
-                .block();
+        try {
+            CotizacionDTO cotizacionDTO = webClient.get()
+                    .uri("/api/v2/Titulos/Datos/bcvl/" + ticker + "/Cotizacion")
+                    .header("Authorization", "Bearer " + tokenActual)
+                    .header("Accept", "application/json")
+                    .retrieve()
+                    .bodyToMono(CotizacionDTO.class)
+                    .block();
+
+            return (cotizacionDTO != null) ? cotizacionDTO.getUltimoPrecio() : 0.0;
+
+        } catch (Exception exception) {
+            System.out.println("Error ocurrido al conectar con IOL: " + exception.getMessage());
+            exception.printStackTrace();
+            return 0.0;
+
+        }
+
     }
 
 }

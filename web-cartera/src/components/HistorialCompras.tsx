@@ -1,12 +1,9 @@
 import {  useEffect, useState } from "react"
 import { CompraInterface } from "../interfaces/CompraInterface"
-import {InflacionInterface} from "../interfaces/InflacionInterface"
 import axios from "axios"
 
 export default function HistorialCompras() {
-  const [compras, setCompras] = useState<CompraInterface[]>([]);
-  const [inflacion, setInflacion] = useState<InflacionInterface[]>([])
-  const [cotizaciones, setCotizaciones] = useState<any[]>([]);
+  const [compras, setCompras] = useState<CompraInterface[]>([])
   const [busqueda, setBusqueda] = useState("");
 
   
@@ -16,12 +13,6 @@ export default function HistorialCompras() {
       try {
         const comprasGuardadas = await axios.get("http://localhost:8080/api/cartera/activas");
         setCompras(comprasGuardadas.data)
-        const inflacionApi = await axios.get("https://api.argentinadatos.com/v1/finanzas/indices/inflacion")
-        setInflacion(inflacionApi.data)
-
-        //  vamos a ver si usamos esto al final
-        const cotizacionesGuardadas = await axios.get("http://localhost:8080/api/cartera/cotizaciones");
-        setCotizaciones(cotizacionesGuardadas.data)
 
 
       } catch (error) {
@@ -42,11 +33,7 @@ const comprasFiltradas = compras.filter(
   }
 )
 
-const calcularInflacionAcumulada = (fechaCompra: string) => {
-    const mesesContados = inflacion.filter(inf =>  {return inf.fecha >= fechaCompra} ) 
-     
-    return mesesContados.reduce((acumulador,mes) => { return acumulador + mes.valor},0).toFixed(2);
-}
+
 
 
 
@@ -90,7 +77,7 @@ const calcularInflacionAcumulada = (fechaCompra: string) => {
             
             <thead className="bg-sky-900 text-sky-100 uppercase text-xs font-semibold">
               <tr>
-                
+                <th className="px-5 py-4">Sector</th>
                 <th className="px-5 py-4">Ticker</th>
                 <th className="px-5 py-4">Familia</th>
                 <th className="px-5 py-4 text-center">Cant.</th>
@@ -110,7 +97,7 @@ const calcularInflacionAcumulada = (fechaCompra: string) => {
 
               {comprasFiltradas.map((p) => (
                 <tr key={p.operacion} className="bg-slate-900 hover:bg-slate-800/50 transition-colors">
-                  
+                  <td className="px-6 py-4 font-bold text-sky-400">{p.sector.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 font-bold text-sky-400">{p.ticker.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-slate-400">{p.familia.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-center">{p.cantidad}</td>
@@ -119,9 +106,9 @@ const calcularInflacionAcumulada = (fechaCompra: string) => {
                     ${(p.cantidad * p.precioUnitario).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-center text-xs text-slate-500">{p.fechaCompra}</td>
-                  <td className="text-center font-semibold">{calcularInflacionAcumulada(p.fechaCompra)}%</td>
-                  <td className="text-center font-semibold">{0}%</td>
-                  <td className="px-6 text-right font-semibold text-emerald-400">${(cotizaciones.length).toLocaleString()}</td>
+                  <td className="text-center font-semibold">{p.inflacionAcumulada}%</td>
+                  <td className="text-center font-semibold">{p.resultadoRealPorcentaje}%</td>
+                  <td className="px-6 text-right font-semibold text-emerald-400">${p.resultadoRealNominal}</td>
                   <td className="px-6 py-4 text-center">
                     <button className="bg-sky-600 hover:bg-emerald-600 text-white text-xs font-bold py-1 px-4 rounded-md transition-transform active:scale-110">
                       Editar

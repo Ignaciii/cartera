@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ignacio.appCartera.DTO.CompraDTO;
 import ignacio.appCartera.models.Compra;
 import ignacio.appCartera.services.CompraService;
 import lombok.RequiredArgsConstructor;
@@ -33,12 +34,12 @@ public class CompraController {
     }
 
     @GetMapping("/activas")
-    public List<Compra> getCompras() {
+    public List<CompraDTO> getCompras() {
         return compraService.obtenerComprasActivas();
     }
 
     @GetMapping("/finalizadas")
-    public List<Compra> getComprasFinalizadas() {
+    public List<CompraDTO> getComprasFinalizadas() {
         return compraService.obtenerComprasFinalizadas();
     }
 
@@ -49,7 +50,7 @@ public class CompraController {
     }
 
     @GetMapping("{operacion}")
-    public Compra getCompra(@PathVariable Long operacion) {
+    public CompraDTO getCompra(@PathVariable Long operacion) {
         return compraService.obtenerCompra(operacion);
     }
 
