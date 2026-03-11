@@ -106,9 +106,16 @@ const comprasFiltradas = compras.filter(
                     ${(p.cantidad * p.precioUnitario).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-center text-xs text-slate-500">{p.fechaCompra}</td>
-                  <td className="text-center font-semibold">{p.inflacionAcumulada}%</td>
-                  <td className="text-center font-semibold">{p.resultadoRealPorcentaje}%</td>
-                  <td className="px-6 text-right font-semibold text-emerald-400">${p.resultadoRealNominal}</td>
+                  <td className="text-center font-semibold">{p.inflacionAcumulada.toFixed(2)}%</td>
+                
+<td className={`text-center font-bold ${p.resultadoRealPorcentaje >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+    {p.resultadoRealPorcentaje.toFixed(2)}%
+</td>
+<td className={`px-6 text-right font-bold ${p.resultadoRealNominal >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+    ${p.resultadoRealNominal.toLocaleString()}
+</td>
+
+
                   <td className="px-6 py-4 text-center">
                     <button className="bg-sky-600 hover:bg-emerald-600 text-white text-xs font-bold py-1 px-4 rounded-md transition-transform active:scale-110">
                       Editar

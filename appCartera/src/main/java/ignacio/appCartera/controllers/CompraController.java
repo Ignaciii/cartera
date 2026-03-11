@@ -38,11 +38,6 @@ public class CompraController {
         return compraService.obtenerComprasActivas();
     }
 
-    @GetMapping("/finalizadas")
-    public List<CompraDTO> getComprasFinalizadas() {
-        return compraService.obtenerComprasFinalizadas();
-    }
-
     @PutMapping("{operacion}")
     public ResponseEntity<Compra> putCompra(@RequestBody Compra compra, @PathVariable Long operacion) {
         return new ResponseEntity<>(compraService.editarCompra(compra, operacion), HttpStatus.ACCEPTED);
