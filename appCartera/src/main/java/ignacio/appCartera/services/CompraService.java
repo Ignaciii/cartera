@@ -38,6 +38,12 @@ public class CompraService {
     public List<CompraDTO> obtenerComprasActivas(boolean forzar) {
         List<Compra> compras = compraRepository.findByEstado(EstadoOperacion.EN_CURSO);
 
+        // SALVAGUARDA: Si la base de datos no tiene compras, cortamos por lo sano.
+        // No chequeamos caché ni imprimimos nada en consola.
+        if (compras.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         long ahora = System.currentTimeMillis();
         boolean cacheValido = (ahora - ultimaActualizacion) < (5 * 60 * 1000);
 

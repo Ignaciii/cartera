@@ -4,39 +4,24 @@ import Swal from 'sweetalert2';
 
 const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
     
-    // 1. Definimos el estado inicial afuera para reusarlo
+    // 1. Definimos el estado inicial
     const estadoInicial = {
         ticker: '',
         cantidad: 0,
         precioUnitario: 0,
         familia: 'ACCION',
-        sector: '',
+        sector: '', // Arranca vacío
         fechaCompra: new Date().toISOString().split('T')[0],
         estado: 'EN_CURSO'
     };
 
     const [compra, setCompra] = useState(estadoInicial);
-    const [sectoresGuardados, setSectoresGuardados] = useState<string[]>([]);
 
-    useEffect(() => {
-        const traerSectores = async () => {
-            try {
-                const respuesta = await axios.get('http://localhost:8080/api/cartera/compras/activas');
-                const sectoresUnicos = [...new Set(respuesta.data.map((c: any) => c.sector))];
-                setSectoresGuardados(sectoresUnicos as string[]);
-            } catch (error) {
-                console.error("Error al traer sectores:", error);
-            }
-        };
-        traerSectores();
-    }, []);
-
-    // ACÁ ESTÁ LA MAGIA DE LAS VALIDACIONES
+    // Las validaciones siguen firmes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         let valorFinal: string | number = value;
 
-        // Validación 1: Si es un número (cantidad o precio), no dejamos que sea negativo
         if (type === 'number') {
             const numero = parseFloat(value);
             if (numero < 0) {
@@ -44,9 +29,8 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
             }
         }
 
-        // Validación 2: Si es el Sector, volamos los números y símbolos raros
+        // Si es el Sector, aunque sea select, mantenemos la limpieza por las dudas
         if (name === 'sector') {
-            // Regex: Solo permite letras (mayúsculas, minúsculas, acentos, ñ) y espacios.
             valorFinal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
         }
 
@@ -55,10 +39,21 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Salvaguarda: que no mande el sector vacío
+        if (!compra.sector) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Falta el sector!',
+                text: 'Elegí un sector para que los colores se vean bien después.',
+                background: '#1e293b',
+                color: '#f1f5f9'
+            });
+            return;
+        }
+
         try {
             await axios.post('http://localhost:8080/api/cartera/compras', compra);
-            
-            // 2. RESETEAMOS EL FORMULARIO ACÁ
             setCompra(estadoInicial);
 
             Swal.fire({
@@ -74,7 +69,7 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
             console.error("Error al cargar:", error);
             Swal.fire({
                 title: '¡Epa!',
-                text: 'El Back te sacó carpiendo. Revisá la consola.',
+                text: 'Hubo un drama con el servidor.',
                 icon: 'error',
                 background: '#1e293b',
                 color: '#f1f5f9',
@@ -118,21 +113,22 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Sector</label>
-                    <input 
+                    {/* ACÁ ESTÁ EL SELECTOR QUE QUERÍAS */}
+                    <select 
                         name="sector" 
                         value={compra.sector} 
-                        list="lista-sectores" 
-                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
+                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none cursor-pointer" 
                         onChange={handleChange} 
-                        placeholder="Energía, Banco..." 
                         required 
-                        autoComplete="off" 
-                    />
-                    <datalist id="lista-sectores">
-                        {sectoresGuardados.map((sector, index) => (
-                            <option key={index} value={sector} />
-                        ))}
-                    </datalist>
+                    >
+                        <option value="" disabled>Seleccionar sector...</option>
+                        <option value="Energía">Energía / Oil & Gas</option>
+                        <option value="Banco">Bancos / Finanzas</option>
+                        <option value="Agro">Agro</option>
+                        <option value="Construcción">Construcción</option>
+                        <option value="Industrial">Industrial</option>
+                        <option value="Bono Soberano">Bono Soberano</option>
+                    </select>
                 </div>
                 
                 <div>

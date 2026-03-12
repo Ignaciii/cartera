@@ -56,6 +56,10 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
   }
 
   const manejarEditar = async (compra: CompraInterface) => {
+    
+    // Función auxiliar para saber qué opción dejar seleccionada por defecto
+    const isSelected = (sectorName: string) => compra.sector.toLowerCase() === sectorName.toLowerCase() ? 'selected' : '';
+
     const { value: formValues } = await Swal.fire({
         title: `Editar ${compra.ticker.toUpperCase()}`,
         background: 'rgba(27, 95, 61, 0.96)',
@@ -63,11 +67,21 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
         html:
             `<div class="text-left px-4">` +
             `<label class="block text-xs text-slate-400 mb-1 uppercase font-bold">Cantidad</label>` +
-            `<input id="swal-input1" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.cantidad}">` +
+            `<input type="number" id="swal-input1" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans" value="${compra.cantidad}">` +
+            
             `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Precio Unitario</label>` +
-            `<input id="swal-input2" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.precioUnitario}">` +
+            `<input type="number" step="0.01" id="swal-input2" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans" value="${compra.precioUnitario}">` +
+            
             `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Sector</label>` +
-            `<input id="swal-input3" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.sector}">` +
+            // ACÁ ESTÁ EL CAMBIO: Reemplazamos el input de texto por un select con las opciones
+            `<select id="swal-input3" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans h-12 px-4 cursor-pointer">` +
+                `<option value="Energía" ${isSelected('Energía')}>Energía / Oil & Gas</option>` +
+                `<option value="Banco" ${isSelected('Banco')}>Bancos / Finanzas</option>` +
+                `<option value="Agro" ${isSelected('Agro')}>Agro</option>` +
+                `<option value="Construcción" ${isSelected('Construcción')}>Construcción</option>` +
+                `<option value="Industrial" ${isSelected('Industrial')}>Industrial</option>` +
+                `<option value="Bono Soberano" ${isSelected('Bono Soberano')}>Bono Soberano</option>` +
+            `</select>` +
             `</div>`,
         focusConfirm: false,
         confirmButtonColor: '#2cb97a',
@@ -79,7 +93,8 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
                 ...compra,
                 cantidad: parseFloat((document.getElementById('swal-input1') as HTMLInputElement).value),
                 precioUnitario: parseFloat((document.getElementById('swal-input2') as HTMLInputElement).value),
-                sector: (document.getElementById('swal-input3') as HTMLInputElement).value
+                // Obtenemos el valor del select
+                sector: (document.getElementById('swal-input3') as HTMLSelectElement).value
             }
         }
     });
@@ -157,7 +172,7 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
 
   const obtenerIconoSector = (sector: string) => {
     const s = sector.toLowerCase();
-    if (s.includes("oil") || s.includes("gas") || s.includes("energ")) return "🛢️"; 
+    if (s.includes("oil") || s.includes("gas") || s.includes("energ")) return "⛽"; 
     if (s.includes("banco") || s.includes("finanz")) return "🏦";
     if (s.includes("agro") || s.includes("campo")) return "🌱";
     if (s.includes("construcci")) return "🧱";
@@ -184,7 +199,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
             Cartera Activa
         </h2>
 
-        {/* CONTENEDOR 95% PARA QUE OCUPE CASI TODA LA PANTALLA */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-[95%] max-w-[1600px] mx-auto">
             <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
                 <p className="text-slate-400 text-xs uppercase tracking-widest mb-1 font-bold">Inversión Inicial</p>
@@ -206,7 +220,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
             </div>
         </div>
 
-        {/* BUSCADOR 95% */}
         <div className="w-[95%] max-w-[1600px] mx-auto mb-8">
           <input 
             className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-sky-500 outline-none transition-all placeholder:text-slate-500 font-sans"
@@ -218,7 +231,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
           />
         </div>
 
-        {/* TABLA 95% */}
         <div className="w-[95%] max-w-[1600px] mx-auto overflow-x-auto rounded-xl border border-slate-800 shadow-2xl">
         {comprasFiltradas.length === 0 ? (
             <p className="text-center p-4">Parece que no hay coincidencias che</p>
@@ -226,7 +238,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
           <table className="w-full text-sm text-left min-w-max">
             <thead className="bg-sky-900 text-sky-100 uppercase text-xs font-semibold">
               <tr>
-                {/* ACHIQUE EL PADDING DE px-5 a px-4 */}
                 <th className="px-4 py-4">Sector</th>
                 <th className="px-4 py-4">Ticker</th>
                 <th className="px-4 py-4">Familia</th>
@@ -245,7 +256,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
               {comprasFiltradas.map((p) => (
                 <tr key={p.operacion} className="bg-slate-900 hover:bg-slate-800/50 transition-colors">
                   
-                  {/* ACHIQUE EL PADDING DE px-6 a px-4 */}
                   <td className="px-4 py-3 text-[10px] uppercase leading-tight">
                       <span className={`font-bold ${obtenerClasesSector(p.sector)}`}>
                           <span className="text-[12px] grayscale-[20%]">{obtenerIconoSector(p.sector)}</span>
@@ -267,7 +277,7 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
                       {p.resultadoRealPorcentaje.toFixed(2)}%
                   </td>
                   <td className={`px-4 py-3 text-right font-bold ${p.resultadoRealNominal >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
-                      ${p.resultadoRealNominal.toLocaleString()}
+                      ${p.resultadoRealNominal.toFixed(2).toLocaleString()}
                   </td>
 
                   <td className="px-4 py-3 text-center">
