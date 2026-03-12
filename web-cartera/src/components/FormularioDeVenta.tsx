@@ -6,7 +6,7 @@ const FormularioDeVenta = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
     const [venta, setVenta] = useState({
         ticker: '',
         cantidad: 0,
-        precioUnitario: 0, // Precio al que vendiste
+        precioVenta: 0, // Precio al que vendiste
         fechaVenta: new Date().toISOString().split('T')[0],
     });
 
@@ -19,7 +19,7 @@ const FormularioDeVenta = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
         e.preventDefault();
         try {
             // OJO ACÁ: Pongo un endpoint imaginario, tenés que ajustarlo a cómo lo armaste en Spring Boot
-            await axios.post('http://localhost:8080/api/cartera/venta', venta);
+            await axios.post('http://localhost:8080/api/cartera/ventas', venta);
             
             Swal.fire({
                 title: '¡Caja!',
@@ -63,7 +63,7 @@ const FormularioDeVenta = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Precio de Venta</label>
-                    <input name="precioUnitario" type="number" step="0.01" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none" onChange={handleChange} required />
+                    <input name="precioVenta" type="number" step="0.01" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-emerald-500 outline-none" onChange={handleChange} required />
                 </div>
                 
                 <div>

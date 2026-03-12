@@ -21,7 +21,7 @@ public class VentaService {
     @Transactional
     public void registrarVenta(VentaDTO ventaDTO) {
         if (ventaDTO != null) {
-            String ticker = ventaDTO.getTicker();
+            String ticker = ventaDTO.getTicker().toUpperCase();
             Double cantidadVender = ventaDTO.getCantidad();
             Double precioVenta = ventaDTO.getPrecioVenta();
             List<Compra> comprasDelTicker = compraService.findByEstadoAndTicker(ticker, EstadoOperacion.EN_CURSO);
@@ -50,7 +50,7 @@ public class VentaService {
                 // Fórmulas de Fisher
                 Double capitalAjustado = capitalInvertido * (1.0 + pi);
                 Double resultadoNominal = valorVentaActual - capitalAjustado;
-                Double resultadoPorcentual = (valorVentaActual / capitalAjustado) - 1;
+                Double resultadoPorcentual = ((valorVentaActual / capitalAjustado) - 1) * 100;
 
                 Venta venta = new Venta();
 

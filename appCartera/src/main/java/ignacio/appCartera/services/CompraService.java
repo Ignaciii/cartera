@@ -47,7 +47,7 @@ public class CompraService {
             if (!cachePrecios.containsKey(ticker)) {
                 Double precioEnVivo = 0.0;
                 // Acá a futuro podés meter el IF para ver si usás IOL o Yahoo
-                if (compra.getFamilia().toLowerCase() == "bono") {
+                if (compra.getFamilia().trim().equalsIgnoreCase("bono")) {
                     precioEnVivo = iolTokenService.obtenerPrecio(ticker);
                 } else {
                     precioEnVivo = yfinanceService.obtenerPrecio(ticker);
@@ -146,6 +146,6 @@ public class CompraService {
     }
 
     public List<Compra> findByEstadoAndTicker(String ticker, EstadoOperacion estadoOperacion) {
-        return compraRepository.findByTickerAndEstadoOrderByFechaCompraAsc(ticker, estadoOperacion);
+        return compraRepository.findByTickerIgnoreCaseAndEstadoOrderByFechaCompraAsc(ticker, estadoOperacion);
     }
 }

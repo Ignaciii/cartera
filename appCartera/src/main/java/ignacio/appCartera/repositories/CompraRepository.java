@@ -12,5 +12,5 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
 
     public List<Compra> findByEstado(EstadoOperacion estado);
 
-    List<Compra> findByTickerAndEstadoOrderByFechaCompraAsc(String ticker, EstadoOperacion estado);
+    List<Compra> findByTickerIgnoreCaseAndEstadoOrderByFechaCompraAsc(String ticker, EstadoOperacion estado);
 }

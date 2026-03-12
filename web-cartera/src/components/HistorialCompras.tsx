@@ -23,7 +23,7 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
     }
 
     try {
-      const comprasGuardadas = await axios.get("http://localhost:8080/api/cartera/activas");
+      const comprasGuardadas = await axios.get("http://localhost:8080/api/cartera/compras/activas");
       setCompras(comprasGuardadas.data);
       
       if (mostrarAlerta) {
