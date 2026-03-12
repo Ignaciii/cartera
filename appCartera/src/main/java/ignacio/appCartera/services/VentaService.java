@@ -9,8 +9,6 @@ import ignacio.appCartera.models.Venta;
 import ignacio.appCartera.repositories.VentaRepository;
 import lombok.RequiredArgsConstructor;
 import ignacio.appCartera.models.Compra;
-
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -59,7 +57,7 @@ public class VentaService {
                 venta.setCantidad(cantidadRestanteVender);
                 venta.setTicker(ticker);
                 venta.setPrecioCompra(precioCompra);
-                venta.setFechaCompra(ventaDTO.getFechaCompra());
+                venta.setFechaCompra(compra.getFechaCompra());
                 venta.setFechaVenta(ventaDTO.getFechaVenta());
                 venta.setResultadoNominal(resultadoNominal);
                 venta.setResultadoPorcentual(resultadoPorcentual);

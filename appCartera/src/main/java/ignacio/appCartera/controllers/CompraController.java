@@ -19,8 +19,8 @@ import ignacio.appCartera.services.CompraService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/cartera")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/cartera/compras")
+@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 public class CompraController {
     private final CompraService compraService;
