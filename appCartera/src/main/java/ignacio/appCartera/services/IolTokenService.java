@@ -50,22 +50,35 @@ public class IolTokenService {
             autenticar();
 
         try {
-            // Código limpio y directo al DTO
-            CotizacionDTO cotizacion = webClient.get()
-                    .uri("/api/v2/bcba/Titulos/" + ticker.toUpperCase() + "/Cotizacion")
-                    .header("Authorization", "Bearer " + tokenActual)
-                    .header("Accept", "application/json")
-                    .retrieve()
-                    .bodyToMono(CotizacionDTO.class)
-                    .block();
-            System.out.println("Ingresaste el ticker: " + ticker + " por IOL");
-            return (cotizacion != null && cotizacion.getUltimoPrecio() != null)
-                    ? cotizacion.getUltimoPrecio()
-                    : 0.0;
-
+            return llamarApiIol(ticker);
         } catch (Exception e) {
+            // Si el error dice 401, es que el token expiró
+            if (e.getMessage() != null && e.getMessage().contains("401")) {
+                System.out.println("🔄 Token de IOL vencido. Re-autenticando...");
+                autenticar(); // Pedimos uno nuevo
+                try {
+                    return llamarApiIol(ticker); // Re-intentamos con el token fresco
+                } catch (Exception e2) {
+                    return 0.0;
+                }
+            }
             System.out.println("❌ ERROR EN IOL (" + ticker + "): " + e.getMessage());
             return 0.0;
         }
+    }
+
+    // Lógica del GET separada para poder usarla y re-intentar si hace falta
+    private Double llamarApiIol(String ticker) {
+        CotizacionDTO cotizacion = webClient.get()
+                .uri("/api/v2/bcba/Titulos/" + ticker.toUpperCase() + "/Cotizacion")
+                .header("Authorization", "Bearer " + tokenActual)
+                .header("Accept", "application/json")
+                .retrieve()
+                .bodyToMono(CotizacionDTO.class)
+                .block();
+        System.out.println("Ingresaste el ticker: " + ticker + " por IOL");
+        return (cotizacion != null && cotizacion.getUltimoPrecio() != null)
+                ? cotizacion.getUltimoPrecio()
+                : 0.0;
     }
 }

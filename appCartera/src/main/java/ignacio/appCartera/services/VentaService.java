@@ -23,14 +23,24 @@ public class VentaService {
         if (ventaDTO != null) {
             String ticker = ventaDTO.getTicker().toUpperCase();
             Double cantidadVender = ventaDTO.getCantidad();
-            Double precioVenta = ventaDTO.getPrecioVenta();
+
+            // TRATAMIENTO ESPECIAL PARA PRECIO DE VENTA DE BONOS
+            Double precioVentaFinal = ventaDTO.getPrecioVenta();
             List<Compra> comprasDelTicker = compraService.findByEstadoAndTicker(ticker, EstadoOperacion.EN_CURSO);
+
+            if (!comprasDelTicker.isEmpty()) {
+                // Chequeamos el primer lote para saber la familia
+                String familia = comprasDelTicker.get(0).getFamilia();
+                if (familia != null && familia.trim().equalsIgnoreCase("BONO")) {
+                    precioVentaFinal = precioVentaFinal / 100.0;
+                }
+            }
+
             Double cantidadDelTickerComprado = comprasDelTicker.stream().mapToDouble(Compra::getCantidad).sum();
 
             if (comprasDelTicker.isEmpty() || cantidadVender <= 0 || cantidadDelTickerComprado < cantidadVender) {
                 throw new RuntimeException("¡Epa! Estás queriendo vender " + cantidadVender + " y solo tenés "
                         + cantidadDelTickerComprado);
-
             }
 
             for (Compra compra : comprasDelTicker) {
@@ -45,12 +55,14 @@ public class VentaService {
 
                 Double precioCompra = compra.getPrecioUnitario();
                 Double capitalInvertido = cantidadRestanteVender * precioCompra;
-                Double valorVentaActual = cantidadRestanteVender * precioVenta;
+
+                // Usamos el precio final (ajustado si era bono)
+                Double valorVentaActual = cantidadRestanteVender * precioVentaFinal;
 
                 // Fórmulas de Fisher
                 Double capitalAjustado = capitalInvertido * (1.0 + pi);
                 Double resultadoNominal = valorVentaActual - capitalAjustado;
-                Double resultadoPorcentual = ((valorVentaActual / capitalAjustado) - 1) * 100;
+                Double resultadoPorcentual = ((valorVentaActual / capitalAjustado) - 1) * 100.0;
 
                 Venta venta = new Venta();
 
@@ -61,7 +73,7 @@ public class VentaService {
                 venta.setFechaVenta(ventaDTO.getFechaVenta());
                 venta.setResultadoNominal(resultadoNominal);
                 venta.setResultadoPorcentual(resultadoPorcentual);
-                venta.setPrecioVenta(precioVenta);
+                venta.setPrecioVenta(precioVentaFinal); // Guardamos el precio unitario real
 
                 ventaRepository.save(venta);
 
@@ -71,9 +83,7 @@ public class VentaService {
                 }
 
                 compraService.cargarCompra(compra);
-
                 cantidadVender -= cantidadRestanteVender;
-
             }
 
         } else {
@@ -97,5 +107,4 @@ public class VentaService {
             return ventaDTO;
         }).toList();
     }
-
 }

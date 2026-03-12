@@ -4,7 +4,8 @@ import Swal from 'sweetalert2';
 
 const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
     
-    const [compra, setCompra] = useState({
+    // 1. Definimos el estado inicial afuera para reusarlo
+    const estadoInicial = {
         ticker: '',
         cantidad: 0,
         precioUnitario: 0,
@@ -12,21 +13,19 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
         sector: '',
         fechaCompra: new Date().toISOString().split('T')[0],
         estado: 'EN_CURSO'
-    });
+    };
 
-    // ESTADO NUEVO: Para guardar la lista de sectores únicos
+    const [compra, setCompra] = useState(estadoInicial);
     const [sectoresGuardados, setSectoresGuardados] = useState<string[]>([]);
 
-    // EFECTO NUEVO: Traemos las compras al cargar la pantalla y sacamos los sectores
     useEffect(() => {
         const traerSectores = async () => {
             try {
                 const respuesta = await axios.get('http://localhost:8080/api/cartera/compras/activas');
-                // Extraemos los sectores y usamos Set para eliminar los repetidos
                 const sectoresUnicos = [...new Set(respuesta.data.map((c: any) => c.sector))];
                 setSectoresGuardados(sectoresUnicos as string[]);
             } catch (error) {
-                console.error("Error al traer sectores para el autocompletado:", error);
+                console.error("Error al traer sectores:", error);
             }
         };
         traerSectores();
@@ -42,6 +41,9 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
         try {
             await axios.post('http://localhost:8080/api/cartera/compras', compra);
             
+            // 2. RESETEAMOS EL FORMULARIO ACÁ
+            setCompra(estadoInicial);
+
             Swal.fire({
                 title: '¡Adentro!',
                 text: 'La compra se guardó joya 🚀',
@@ -72,7 +74,14 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Ticker</label>
-                    <input name="ticker" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" onChange={handleChange} placeholder="YPFD" required />
+                    <input 
+                        name="ticker" 
+                        value={compra.ticker} // IMPORTANTE: Agregado value
+                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
+                        onChange={handleChange} 
+                        placeholder="YPFD" 
+                        required 
+                    />
                 </div>
                 
                 <div>
@@ -90,17 +99,17 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                     </select>
                 </div>
 
-                {/* ACÁ ENTRA LA MAGIA DEL DATALIST PARA EL SECTOR */}
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Sector</label>
                     <input 
                         name="sector" 
-                        list="lista-sectores" // Conecta el input con el datalist de abajo
+                        value={compra.sector} // IMPORTANTE: Agregado value
+                        list="lista-sectores" 
                         className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
                         onChange={handleChange} 
                         placeholder="Energía, Banco..." 
                         required 
-                        autoComplete="off" // Apagamos el historial del navegador para que no moleste
+                        autoComplete="off" 
                     />
                     <datalist id="lista-sectores">
                         {sectoresGuardados.map((sector, index) => (
@@ -111,17 +120,38 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Cantidad</label>
-                    <input name="cantidad" type="number" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" onChange={handleChange} required />
+                    <input 
+                        name="cantidad" 
+                        type="number" 
+                        value={compra.cantidad || ''} // Si es 0, lo dejamos vacío para ver placeholder
+                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
+                        onChange={handleChange} 
+                        required 
+                    />
                 </div>
                 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Precio U.</label>
-                    <input name="precioUnitario" type="number" step="0.01" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" onChange={handleChange} required />
+                    <input 
+                        name="precioUnitario" 
+                        type="number" 
+                        step="0.01" 
+                        value={compra.precioUnitario || ''} // Si es 0, lo dejamos vacío
+                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
+                        onChange={handleChange} 
+                        required 
+                    />
                 </div>
                 
                 <div>
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Fecha</label>
-                    <input name="fechaCompra" type="date" className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" value={compra.fechaCompra} onChange={handleChange} />
+                    <input 
+                        name="fechaCompra" 
+                        type="date" 
+                        className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
+                        value={compra.fechaCompra} 
+                        onChange={handleChange} 
+                    />
                 </div>
                 
                 <button type="button" onClick={volverAlMenu} className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded transition-all active:scale-95 border border-slate-600">

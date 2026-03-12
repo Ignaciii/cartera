@@ -22,6 +22,10 @@ public class CompraService {
     private final InflacionService inflacionService;
     private final YfinanceService yfinanceService;
 
+    // EL MACHETE AHORA ES GLOBAL
+    private final Map<String, Double> machetePreciosGlobal = new HashMap<>();
+    private long ultimaActualizacion = 0;
+
     public Compra cargarCompra(Compra compra) {
         return compraRepository.save(compra);
     }
@@ -30,35 +34,62 @@ public class CompraService {
     // MÉTODOS OPTIMIZADOS CON CACHÉ
     // ==========================================
 
-    public List<CompraDTO> obtenerComprasActivas() {
+    // ACÁ ESTÁ EL CAMBIO CLAVE: Recibe el booleano 'forzar'
+    public List<CompraDTO> obtenerComprasActivas(boolean forzar) {
         List<Compra> compras = compraRepository.findByEstado(EstadoOperacion.EN_CURSO);
+
+        long ahora = System.currentTimeMillis();
+        boolean cacheValido = (ahora - ultimaActualizacion) < (5 * 60 * 1000);
+
+        // Si NO estamos forzando, y el caché es válido, y no está vacío... usamos caché
+        if (!forzar && cacheValido && !machetePreciosGlobal.isEmpty()) {
+            System.out.println("🚀 Usando precios del machete (Caché de servidor)");
+            return compras.stream()
+                    .map(c -> convertirADTO(c, machetePreciosGlobal.getOrDefault(c.getTicker().toUpperCase(), 0.0)))
+                    .toList();
+        }
+
+        // Si forzamos, o el caché venció, actualizamos y vamos a buscar a la API
+        if (forzar) {
+            System.out.println("⚡ Actualización forzada por el usuario. Golpeando a las APIs...");
+        } else {
+            System.out.println("⏰ Caché vencido. Actualizando precios...");
+        }
+
+        ultimaActualizacion = ahora;
         return procesarComprasConCache(compras);
+    }
+
+    // Para mantener compatibilidad si lo llamás desde otro lado sin el boolean
+    public List<CompraDTO> obtenerComprasActivas() {
+        return obtenerComprasActivas(false);
     }
 
     // El método maestro que arma el machete
     private List<CompraDTO> procesarComprasConCache(List<Compra> compras) {
-        Map<String, Double> cachePrecios = new HashMap<>();
+        machetePreciosGlobal.clear(); // Limpiamos la vieja data
         List<CompraDTO> comprasProcesadas = new ArrayList<>();
 
         for (Compra compra : compras) {
             String ticker = compra.getTicker().toUpperCase();
 
             // Preguntamos si ya buscamos este ticker en esta vuelta
-            if (!cachePrecios.containsKey(ticker)) {
+            if (!machetePreciosGlobal.containsKey(ticker)) {
                 Double precioEnVivo = 0.0;
-                // Acá a futuro podés meter el IF para ver si usás IOL o Yahoo
+
+                // Chequeamos si es bono para IOL, sino a Yahoo
                 if (compra.getFamilia().trim().equalsIgnoreCase("bono")) {
-                    precioEnVivo = iolTokenService.obtenerPrecio(ticker);
+                    precioEnVivo = iolTokenService.obtenerPrecio(ticker) / 100.0;
                 } else {
                     precioEnVivo = yfinanceService.obtenerPrecio(ticker);
                 }
 
                 // Lo anotamos en el machete para las próximas iteraciones
-                cachePrecios.put(ticker, precioEnVivo);
+                machetePreciosGlobal.put(ticker, precioEnVivo);
             }
 
-            // Usamos el precio (ya sea recién sacado de IOL o rescatado del machete)
-            Double precioActual = cachePrecios.get(ticker);
+            // Usamos el precio (ya sea recién sacado de la API o rescatado del machete)
+            Double precioActual = machetePreciosGlobal.get(ticker);
 
             // Convertimos la compra pasando el precio por parámetro
             comprasProcesadas.add(convertirADTO(compra, precioActual));
@@ -68,10 +99,9 @@ public class CompraService {
     }
 
     // ==========================================
-    // MÉTODOS INDIVIDUALES Y CONVERSIÓN
+    // MÉTODOS INDIVIDUALES Y CONVERSIÓN (Sin cambios)
     // ==========================================
 
-    // CHEQUEAR QUE TAN NECESARIO SOS VOS
     public CompraDTO obtenerCompra(Long operacion) {
         Compra compra = compraRepository.findById(operacion).orElse(null);
         if (compra == null)
@@ -81,7 +111,6 @@ public class CompraService {
         return convertirADTO(compra, precioActual);
     }
 
-    // A VOS ME PARECE QUE TE VOY A CAMBIAR POR ARMAR UNA VENTA
     public Compra editarCompra(Compra compra, Long id) {
         Compra compraEditar = compraRepository.findById(id).orElse(null);
         if (compra != null && compraEditar != null) {
@@ -97,8 +126,6 @@ public class CompraService {
         return compraEditar;
     }
 
-    // Fijate que ahora pide el precio por parámetro para no llamar a IOL desde acá
-    // adentro
     public CompraDTO convertirADTO(Compra compra, Double valorDeMercado) {
         Double inflacionAcumulada = inflacionService.calcularInflacionAcumulada(compra.getFechaCompra().toString());
 
@@ -116,10 +143,6 @@ public class CompraService {
         compraDTO.setValorDeMercado(valorDeMercado);
         compraDTO.setTotal(compra.getCantidad() * compra.getPrecioUnitario());
 
-        // ========================================================
-        // CÁLCULO FINANCIERO CORREGIDO (Exacto por Ecuación de Fisher)
-        // ========================================================
-
         // 1. Inflación a decimal
         Double pi = inflacionAcumulada / 100.0;
 
@@ -132,7 +155,6 @@ public class CompraService {
         Double resultadoRealNominal = valorActual - capitalAjustado;
 
         // 4. Resultado Real Porcentual (%)
-        // Prevenimos dividir por cero por si la base de datos trae algún error de carga
         Double resultadoRealPorcentual = 0.0;
         if (compra.getPrecioUnitario() > 0) {
             Double multiplicadorNominal = valorDeMercado / compra.getPrecioUnitario();

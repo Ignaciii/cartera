@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react"
 import { CompraInterface } from "../interfaces/CompraInterface"
 import axios from "axios"
-import Swal from 'sweetalert2'; // <-- Adentro SweetAlert
+import Swal from 'sweetalert2'; 
 
 export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () => void }) {
   const [compras, setCompras] = useState<CompraInterface[]>([])
   const [busqueda, setBusqueda] = useState("");
 
-  // Separamos la lógica de ir a buscar al Back en esta función
   const traerCompras = async (mostrarAlerta = false) => {
     if (mostrarAlerta) {
       Swal.fire({
@@ -23,7 +22,12 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
     }
 
     try {
-      const comprasGuardadas = await axios.get("http://localhost:8080/api/cartera/compras/activas");
+      // ACÁ ESTÁ EL CAMBIO PARA FORZAR LA ACTUALIZACIÓN
+      const url = mostrarAlerta 
+            ? "http://localhost:8080/api/cartera/compras/activas?forzar=true" 
+            : "http://localhost:8080/api/cartera/compras/activas";
+
+      const comprasGuardadas = await axios.get(url);
       setCompras(comprasGuardadas.data);
       
       if (mostrarAlerta) {
@@ -34,7 +38,7 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
           background: '#1e293b',
           color: '#f1f5f9',
           confirmButtonColor: '#0284c7',
-          timer: 1500 // Se cierra solo al segundo y medio
+          timer: 1500 
         });
       }
     } catch (error) {
@@ -52,7 +56,78 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
     }
   }
 
-  // Cuando carga el componente por primera vez, llama sin alerta
+  // LÓGICA PARA EDITAR CON DOBLE CONFIRMACIÓN
+  const manejarEditar = async (compra: CompraInterface) => {
+    // 1. PRIMER POPUP: Captura de datos
+    const { value: formValues } = await Swal.fire({
+        title: `Editar ${compra.ticker.toUpperCase()}`,
+        background: '#1e293b',
+        color: '#f1f5f9',
+        html:
+            `<div class="text-left px-4">` +
+            `<label class="block text-xs text-slate-400 mb-1 uppercase font-bold">Cantidad</label>` +
+            `<input id="swal-input1" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.cantidad}">` +
+            `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Precio Unitario</label>` +
+            `<input id="swal-input2" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.precioUnitario}">` +
+            `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Sector</label>` +
+            `<input id="swal-input3" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white" value="${compra.sector}">` +
+            `</div>`,
+        focusConfirm: false,
+        confirmButtonColor: '#0284c7',
+        confirmButtonText: 'Siguiente',
+        showCancelButton: true,
+        cancelButtonColor: '#475569',
+        preConfirm: () => {
+            return {
+                ...compra,
+                cantidad: parseFloat((document.getElementById('swal-input1') as HTMLInputElement).value),
+                precioUnitario: parseFloat((document.getElementById('swal-input2') as HTMLInputElement).value),
+                sector: (document.getElementById('swal-input3') as HTMLInputElement).value
+            }
+        }
+    });
+
+    // 2. SEGUNDO POPUP: Confirmación final
+    if (formValues) {
+        const resultadoConfirmacion = await Swal.fire({
+            title: '¿Confirmar cambios?',
+            text: `Vas a actualizar ${compra.ticker}. ¿Estás seguro?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#059669', // emerald-600
+            cancelButtonColor: '#e11d48', // rose-600
+            confirmButtonText: 'Sí, aplicar cambios',
+            cancelButtonText: 'No, cancelar',
+            background: '#1e293b',
+            color: '#f1f5f9',
+        });
+
+        // 3. EJECUCIÓN: Solo si el usuario confirmó el segundo cartel
+        if (resultadoConfirmacion.isConfirmed) {
+            try {
+                await axios.put(`http://localhost:8080/api/cartera/compras/${compra.operacion}`, formValues);
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: '¡Actualizado!', 
+                    background: '#1e293b', 
+                    color: '#f1f5f9', 
+                    timer: 1000, 
+                    showConfirmButton: false 
+                });
+                traerCompras(false); 
+            } catch (error) {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error al editar', 
+                    text: 'El servidor no aceptó los cambios.',
+                    background: '#1e293b', 
+                    color: '#f1f5f9' 
+                });
+            }
+        }
+    }
+  }
+
   useEffect(() => {
     traerCompras(false);
   }, [])
@@ -67,13 +142,16 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
     }
   )
 
+  const totalInvertidoNominal = compras.reduce((acc, p) => acc + (p.cantidad * p.precioUnitario), 0);
+  const totalValuacionActual = compras.reduce((acc, p) => acc + (p.cantidad * p.valorDeMercado), 0);
+  const totalGananciaReal = compras.reduce((acc, p) => acc + p.resultadoRealNominal, 0);
+
   return (
     <div className="bg-slate-900 min-h-screen justify-items-center mx-auto overflow-hidden" >
                                   
       {compras.length == 0 ? (
           <div className="grid justify-items border-4 border-blue-800/50 mt-60 rounded-xl p-10 " >
             <p className="pb-4 text-slate-100">Parece que no hay compras en curso che</p> 
-            {/* Le enchufamos la función al botón Volver */}
             <button onClick={volverAlMenu} className="mx-auto py-2 px-4 ease-out rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 active:scale-85 hover:opacity-100 duration-400 text-white font-bold">
               Volver
             </button> 
@@ -82,6 +160,23 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
         : ( 
       <div className="bg-slate-900 min-h-screen p-8 text-slate-100 w-full">
       
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto w-full">
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <p className="text-slate-400 text-xs uppercase tracking-widest mb-1 font-bold">Inversión Inicial</p>
+                <h3 className="text-2xl font-bold text-slate-100">${totalInvertidoNominal.toLocaleString()}</h3>
+            </div>
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <p className="text-slate-400 text-xs uppercase tracking-widest mb-1 font-bold">Valuación a Mercado</p>
+                <h3 className="text-2xl font-bold text-sky-400">${totalValuacionActual.toLocaleString()}</h3>
+            </div>
+            <div className={`bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl ${totalGananciaReal >= 0 ? 'border-emerald-500/30' : 'border-rose-500/30'}`}>
+                <p className="text-slate-400 text-xs uppercase tracking-widest mb-1 font-bold">Ganancia Real (Fisher)</p>
+                <h3 className={`text-2xl font-bold ${totalGananciaReal >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                    {totalGananciaReal >= 0 ? '+' : ''}${totalGananciaReal.toLocaleString()}
+                </h3>
+            </div>
+        </div>
+
         <div className="max-w-4xl mx-auto mb-8">
           <input 
             className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-sky-500 outline-none transition-all placeholder:text-slate-500"
@@ -113,11 +208,10 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
               </tr>
             </thead>
 
-            {/* Cuerpo con filas alternas */}
             <tbody className="divide-y divide-slate-800">
               {comprasFiltradas.map((p) => (
                 <tr key={p.operacion} className="bg-slate-900 hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-sky-400">{p.sector.toLocaleUpperCase()}</td>
+                  <td className="px-6 py-4 font-bold text-sky-400 text-[10px] uppercase leading-tight">{p.sector}</td>
                   <td className="px-6 py-4 font-bold text-sky-400">{p.ticker.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-slate-400">{p.familia.toLocaleUpperCase()}</td>
                   <td className="px-6 py-4 text-center">{p.cantidad}</td>
@@ -136,7 +230,10 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
                   </td>
 
                   <td className="px-6 py-4 text-center">
-                    <button className="bg-sky-600 hover:bg-emerald-600 text-white text-xs font-bold py-1 px-4 rounded-md transition-transform active:scale-110">
+                    <button 
+                      onClick={() => manejarEditar(p)}
+                      className="bg-sky-600 hover:bg-emerald-600 text-white text-xs font-bold py-1 px-4 rounded-md transition-transform active:scale-110"
+                    >
                       Editar
                     </button>
                   </td>
@@ -154,14 +251,13 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
             Volver al Menú
           </button>
           
-          {/* ¡Le enchufamos la función con true para que muestre la alerta! */}
           <button 
             onClick={() => traerCompras(true)} 
             className="bg-sky-600 hover:bg-sky-500 px-8 py-3 rounded-xl shadow-lg shadow-sky-900/50 duration-300 border border-sky-500/50 transition-all active:scale-95 text-white font-bold tracking-wide"
           >
             Actualizar Cartera
           </button>
-        </div>
+        </div> 
       
       </div>)}
     </div>

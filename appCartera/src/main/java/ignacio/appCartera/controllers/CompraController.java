@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ignacio.appCartera.DTO.CompraDTO;
@@ -34,8 +35,10 @@ public class CompraController {
     }
 
     @GetMapping("/activas")
-    public List<CompraDTO> getCompras() {
-        return compraService.obtenerComprasActivas();
+    public ResponseEntity<List<CompraDTO>> obtenerActivas(
+            @RequestParam(required = false, defaultValue = "false") boolean forzar) {
+        // Le pasamos el parámetro 'forzar' al Service
+        return ResponseEntity.ok(compraService.obtenerComprasActivas(forzar));
     }
 
     @PutMapping("{operacion}")
