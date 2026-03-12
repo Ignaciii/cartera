@@ -16,7 +16,7 @@ public class CompraDTO {
     private String familia;
     private String sector;
     private Double precioUnitario;
-    private Integer cantidad;
+    private Double cantidad;
     private EstadoOperacion estado;
     private LocalDate fechaCompra;
     private String ticker;

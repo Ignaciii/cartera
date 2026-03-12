@@ -3,8 +3,6 @@ package ignacio.appCartera.models;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,19 +14,21 @@ import lombok.NoArgsConstructor;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class Compra {
+public class Venta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long operacion;
+    private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private EstadoOperacion estado;
+    private Double precioCompra;
+    private Double precioVenta;
 
-    private String sector;
     private String ticker;
     private Double cantidad;
-    private Double precioUnitario;
+
     private LocalDate fechaCompra;
-    private String familia;
+    private LocalDate fechaVenta;
+
+    private Double resultadoPorcentual;
+    private Double resultadoNominal;
 }

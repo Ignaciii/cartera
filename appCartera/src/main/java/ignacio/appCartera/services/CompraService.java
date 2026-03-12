@@ -144,4 +144,8 @@ public class CompraService {
 
         return compraDTO;
     }
+
+    public List<Compra> findByEstadoAndTicker(String ticker, EstadoOperacion estadoOperacion) {
+        return compraRepository.findByTickerAndEstadoOrderByFechaCompraAsc(ticker, estadoOperacion);
+    }
 }

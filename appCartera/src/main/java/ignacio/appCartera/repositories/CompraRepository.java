@@ -11,4 +11,6 @@ import ignacio.appCartera.models.EstadoOperacion;
 public interface CompraRepository extends JpaRepository<Compra, Long> {
 
     public List<Compra> findByEstado(EstadoOperacion estado);
+
+    List<Compra> findByTickerAndEstadoOrderByFechaCompraAsc(String ticker, EstadoOperacion estado);
 }
