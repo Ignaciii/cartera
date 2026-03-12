@@ -31,9 +31,26 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
         traerSectores();
     }, []);
 
+    // ACÁ ESTÁ LA MAGIA DE LAS VALIDACIONES
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setCompra({ ...compra, [name]: value });
+        const { name, value, type } = e.target;
+        let valorFinal: string | number = value;
+
+        // Validación 1: Si es un número (cantidad o precio), no dejamos que sea negativo
+        if (type === 'number') {
+            const numero = parseFloat(value);
+            if (numero < 0) {
+                valorFinal = 0;
+            }
+        }
+
+        // Validación 2: Si es el Sector, volamos los números y símbolos raros
+        if (name === 'sector') {
+            // Regex: Solo permite letras (mayúsculas, minúsculas, acentos, ñ) y espacios.
+            valorFinal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        }
+
+        setCompra({ ...compra, [name]: valorFinal });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -76,7 +93,7 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Ticker</label>
                     <input 
                         name="ticker" 
-                        value={compra.ticker} // IMPORTANTE: Agregado value
+                        value={compra.ticker} 
                         className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
                         onChange={handleChange} 
                         placeholder="YPFD" 
@@ -103,7 +120,7 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                     <label className="block text-xs text-slate-400 mb-1 uppercase">Sector</label>
                     <input 
                         name="sector" 
-                        value={compra.sector} // IMPORTANTE: Agregado value
+                        value={compra.sector} 
                         list="lista-sectores" 
                         className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
                         onChange={handleChange} 
@@ -123,7 +140,7 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                     <input 
                         name="cantidad" 
                         type="number" 
-                        value={compra.cantidad || ''} // Si es 0, lo dejamos vacío para ver placeholder
+                        value={compra.cantidad === 0 ? '' : compra.cantidad} 
                         className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
                         onChange={handleChange} 
                         required 
@@ -136,7 +153,7 @@ const FormularioDeCompra = ({ volverAlMenu }: { volverAlMenu: () => void }) => {
                         name="precioUnitario" 
                         type="number" 
                         step="0.01" 
-                        value={compra.precioUnitario || ''} // Si es 0, lo dejamos vacío
+                        value={compra.precioUnitario === 0 ? '' : compra.precioUnitario} 
                         className="w-full p-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none" 
                         onChange={handleChange} 
                         required 

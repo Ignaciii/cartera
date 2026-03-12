@@ -82,7 +82,7 @@ export default function HistorialVentas({ volverAlMenu }: { volverAlMenu: () => 
         <div className="flex flex-col items-center justify-center border border-slate-700 mt-32 rounded-2xl p-12 max-w-lg bg-slate-800/50 shadow-2xl text-center">
           <span className="text-6xl mb-6">🕸️</span>
           <p className="pb-8 text-slate-300 text-lg font-semibold tracking-wide">
-            Todavía no reventaste ningún papel, fiera.
+            No vendimos nada aun, Turco.
           </p> 
           <button 
             onClick={volverAlMenu} 

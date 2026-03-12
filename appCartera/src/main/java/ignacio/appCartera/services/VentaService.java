@@ -24,17 +24,9 @@ public class VentaService {
             String ticker = ventaDTO.getTicker().toUpperCase();
             Double cantidadVender = ventaDTO.getCantidad();
 
-            // TRATAMIENTO ESPECIAL PARA PRECIO DE VENTA DE BONOS
+            // Usamos el precio tal cual viene del formulario, sin dividir por 100
             Double precioVentaFinal = ventaDTO.getPrecioVenta();
             List<Compra> comprasDelTicker = compraService.findByEstadoAndTicker(ticker, EstadoOperacion.EN_CURSO);
-
-            if (!comprasDelTicker.isEmpty()) {
-                // Chequeamos el primer lote para saber la familia
-                String familia = comprasDelTicker.get(0).getFamilia();
-                if (familia != null && familia.trim().equalsIgnoreCase("BONO")) {
-                    precioVentaFinal = precioVentaFinal / 100.0;
-                }
-            }
 
             Double cantidadDelTickerComprado = comprasDelTicker.stream().mapToDouble(Compra::getCantidad).sum();
 
@@ -56,7 +48,7 @@ public class VentaService {
                 Double precioCompra = compra.getPrecioUnitario();
                 Double capitalInvertido = cantidadRestanteVender * precioCompra;
 
-                // Usamos el precio final (ajustado si era bono)
+                // Usamos el precio final directo
                 Double valorVentaActual = cantidadRestanteVender * precioVentaFinal;
 
                 // Fórmulas de Fisher
