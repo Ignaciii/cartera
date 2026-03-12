@@ -58,7 +58,7 @@ public class IolTokenService {
                     .retrieve()
                     .bodyToMono(CotizacionDTO.class)
                     .block();
-
+            System.out.println("Ingresaste el ticker: " + ticker + " por IOL");
             return (cotizacion != null && cotizacion.getUltimoPrecio() != null)
                     ? cotizacion.getUltimoPrecio()
                     : 0.0;

@@ -20,6 +20,7 @@ public class CompraService {
     private final CompraRepository compraRepository;
     private final IolTokenService iolTokenService;
     private final InflacionService inflacionService;
+    private final YfinanceService yfinanceService;
 
     public Compra cargarCompra(Compra compra) {
         return compraRepository.save(compra);
@@ -44,9 +45,13 @@ public class CompraService {
 
             // Preguntamos si ya buscamos este ticker en esta vuelta
             if (!cachePrecios.containsKey(ticker)) {
-
+                Double precioEnVivo = 0.0;
                 // Acá a futuro podés meter el IF para ver si usás IOL o Yahoo
-                Double precioEnVivo = iolTokenService.obtenerPrecio(ticker);
+                if (compra.getFamilia().toLowerCase() == "bono") {
+                    precioEnVivo = iolTokenService.obtenerPrecio(ticker);
+                } else {
+                    precioEnVivo = yfinanceService.obtenerPrecio(ticker);
+                }
 
                 // Lo anotamos en el machete para las próximas iteraciones
                 cachePrecios.put(ticker, precioEnVivo);
@@ -66,6 +71,7 @@ public class CompraService {
     // MÉTODOS INDIVIDUALES Y CONVERSIÓN
     // ==========================================
 
+    // CHEQUEAR QUE TAN NECESARIO SOS VOS
     public CompraDTO obtenerCompra(Long operacion) {
         Compra compra = compraRepository.findById(operacion).orElse(null);
         if (compra == null)
@@ -75,6 +81,7 @@ public class CompraService {
         return convertirADTO(compra, precioActual);
     }
 
+    // A VOS ME PARECE QUE TE VOY A CAMBIAR POR ARMAR UNA VENTA
     public Compra editarCompra(Compra compra, Long id) {
         Compra compraEditar = compraRepository.findById(id).orElse(null);
         if (compra != null && compraEditar != null) {
@@ -133,8 +140,6 @@ public class CompraService {
         }
 
         compraDTO.setResultadoRealNominal(resultadoRealNominal);
-        // Lo multiplicamos por 100 para que el front lo agarre en formato porcentaje
-        // (Ej: 15.5%)
         compraDTO.setResultadoRealPorcentaje(resultadoRealPorcentual * 100.0);
 
         return compraDTO;
