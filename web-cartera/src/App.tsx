@@ -13,7 +13,7 @@ function App() {
       
       {pantallaActual === 'menu' && (
         <div className="flex flex-col items-center justify-center min-h-screen">
-          <h1 className="text-4xl text-sky-400 mb-10 tracking-widest ">AppCartera</h1>
+          <h1 className="text-4xl text-blue-500 mb-10 tracking-widest animate-pulse">AppCartera</h1>
           <div className="flex flex-col gap-4 w-72">
             
             <button 

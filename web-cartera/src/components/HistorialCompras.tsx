@@ -56,8 +56,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
   }
 
   const manejarEditar = async (compra: CompraInterface) => {
-    
-    // Función auxiliar para saber qué opción dejar seleccionada por defecto
     const isSelected = (sectorName: string) => compra.sector.toLowerCase() === sectorName.toLowerCase() ? 'selected' : '';
 
     const { value: formValues } = await Swal.fire({
@@ -68,12 +66,9 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
             `<div class="text-left px-4">` +
             `<label class="block text-xs text-slate-400 mb-1 uppercase font-bold">Cantidad</label>` +
             `<input type="number" id="swal-input1" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans" value="${compra.cantidad}">` +
-            
             `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Precio Unitario</label>` +
             `<input type="number" step="0.01" id="swal-input2" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans" value="${compra.precioUnitario}">` +
-            
             `<label class="block text-xs text-slate-400 mt-4 mb-1 uppercase font-bold">Sector</label>` +
-            // ACÁ ESTÁ EL CAMBIO: Reemplazamos el input de texto por un select con las opciones
             `<select id="swal-input3" class="swal2-input !m-0 !w-full bg-slate-800 border-slate-700 text-white font-sans h-12 px-4 cursor-pointer">` +
                 `<option value="Energía" ${isSelected('Energía')}>Energía / Oil & Gas</option>` +
                 `<option value="Banco" ${isSelected('Banco')}>Bancos / Finanzas</option>` +
@@ -93,7 +88,6 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
                 ...compra,
                 cantidad: parseFloat((document.getElementById('swal-input1') as HTMLInputElement).value),
                 precioUnitario: parseFloat((document.getElementById('swal-input2') as HTMLInputElement).value),
-                // Obtenemos el valor del select
                 sector: (document.getElementById('swal-input3') as HTMLSelectElement).value
             }
         }
@@ -146,11 +140,17 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
     setBusqueda(evento.target.value);
   }
 
+  // --- ACÁ ESTÁ EL CAMBIO ---
   const comprasFiltradas = compras.filter(
     compra => {
-      return compra.ticker.toLowerCase().includes(busqueda.toLowerCase()) || compra.familia.toLowerCase().includes(busqueda.toLowerCase())
+      const b = busqueda.toLowerCase();
+      return (
+          compra.ticker.toLowerCase().includes(b) || 
+          compra.familia.toLowerCase().includes(b) ||
+          compra.sector.toLowerCase().includes(b) // Agregamos la búsqueda por sector
+      );
     }
-  )
+  );
 
   const totalInvertidoNominal = compras.reduce((acc, p) => acc + (p.cantidad * p.precioUnitario), 0);
   const totalValuacionActual = compras.reduce((acc, p) => acc + (p.cantidad * p.valorDeMercado), 0);
@@ -182,22 +182,40 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
   }
 
   return (
-    <div className="bg-slate-900 min-h-screen justify-items-center mx-auto overflow-hidden" >
+    <div className="bg-slate-900 min-h-screen flex flex-col items-center mx-auto overflow-hidden">
                                   
       {compras.length === 0 ? (
-          <div className="grid justify-items border-4 border-blue-800/50 mt-60 rounded-xl p-10 " >
-            <p className="pb-4 text-slate-100">Parece que no hay compras en curso che</p> 
-            <button onClick={volverAlMenu} className="mx-auto py-2 px-4 ease-out rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 active:scale-85 hover:opacity-100 duration-400 text-white font-bold">
-              Volver
+          <div className="flex flex-col items-center justify-center border-2 border-sky-800/30 bg-slate-800/20 mt-40 rounded-3xl p-12 shadow-2xl">
+            <div className="relative mb-6">
+                <span className="animate-spin absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-20"></span>
+                <div className="relative bg-sky-500/20 p-4 rounded-full text-4xl">📂</div>
+            </div>
+            <p className="pb-6 text-slate-300 text-xl font-medium">Parece que no hay compras en curso, che.</p> 
+            <button 
+                onClick={volverAlMenu} 
+                className="py-3 px-10 rounded-xl bg-sky-600 hover:bg-sky-500 shadow-lg shadow-sky-900/40 active:scale-95 transition-all text-white font-bold uppercase tracking-wider"
+            >
+              Volver al Menú
             </button> 
           </div>
         )
         : ( 
       <div className="bg-slate-900 min-h-screen p-8 text-slate-100 w-full">
       
-        <h2 className="text-3xl  text-sky-400 text-center mb-8 tracking-widest font-sans">
-            Cartera Activa
-        </h2>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-10">
+            <h2 className="text-4xl text-sky-400 tracking-[0.2em] font-sans uppercase font-black">
+                Cartera Activa
+            </h2>
+            <div className="bg-sky-500/10 border border-sky-500/30 px-5 py-1.5 rounded-full flex items-center gap-3 shadow-lg shadow-sky-900/20">
+                <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                </span>
+                <span className="text-sky-400 font-black text-sm tracking-tighter uppercase">
+                    {compras.length} {compras.length === 1 ? 'ACTIVO' : 'ACTIVOS'} EN CURSO
+                </span>
+            </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-[95%] max-w-[1600px] mx-auto">
             <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
@@ -223,7 +241,8 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
         <div className="w-[95%] max-w-[1600px] mx-auto mb-8">
           <input 
             className="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-sky-500 outline-none transition-all placeholder:text-slate-500 font-sans"
-            placeholder="Buscar activo (AL30, GGAL...)"
+            // ACÁ ESTÁ EL OTRO CAMBIO: Le avisé al usuario que puede buscar por sector
+            placeholder="Buscar activo, familia o sector (AL30, Energía...)"
             type="text"
             name="search"
             value={busqueda}
@@ -233,10 +252,10 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
 
         <div className="w-[95%] max-w-[1600px] mx-auto overflow-x-auto rounded-xl border border-slate-800 shadow-2xl">
         {comprasFiltradas.length === 0 ? (
-            <p className="text-center p-4">Parece que no hay coincidencias che</p>
+            <p className="text-center p-8 text-slate-500 italic">No encontramos ninguna coincidencia para tu búsqueda.</p>
           ) : (
           <table className="w-full text-sm text-left min-w-max">
-            <thead className="bg-sky-900 text-sky-100 uppercase text-xs font-semibold">
+            <thead className="bg-sky-900/80 text-sky-100 uppercase text-xs font-semibold">
               <tr>
                 <th className="px-4 py-4">Sector</th>
                 <th className="px-4 py-4">Ticker</th>
@@ -255,14 +274,12 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
             <tbody className="divide-y divide-slate-800">
               {comprasFiltradas.map((p) => (
                 <tr key={p.operacion} className="bg-slate-900 hover:bg-slate-800/50 transition-colors">
-                  
                   <td className="px-4 py-3 text-[10px] uppercase leading-tight">
                       <span className={`font-bold ${obtenerClasesSector(p.sector)}`}>
                           <span className="text-[12px] grayscale-[20%]">{obtenerIconoSector(p.sector)}</span>
                           {p.sector}
                       </span>
                   </td>
-                  
                   <td className="px-4 py-3 font-bold text-sky-400">{p.ticker.toLocaleUpperCase()}</td>
                   <td className="px-4 py-3 text-slate-400">{p.familia.toLocaleUpperCase()}</td>
                   <td className="px-4 py-3 text-center">{p.cantidad}</td>
@@ -272,14 +289,12 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
                   </td>
                   <td className="px-4 py-3 text-center text-xs text-slate-500">{p.fechaCompra}</td>
                   <td className="px-4 py-3 text-center font-semibold">{p.inflacionAcumulada.toFixed(2)}%</td>
-                
                   <td className={`px-4 py-3 text-center font-bold ${p.resultadoRealPorcentaje >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
                       {p.resultadoRealPorcentaje.toFixed(2)}%
                   </td>
                   <td className={`px-4 py-3 text-right font-bold ${p.resultadoRealNominal >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
-                      ${p.resultadoRealNominal.toFixed(2).toLocaleString()}
+                      ${p.resultadoRealNominal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-
                   <td className="px-4 py-3 text-center">
                     <button 
                       onClick={() => manejarEditar(p)}
@@ -295,17 +310,17 @@ export default function HistorialCompras({ volverAlMenu }: { volverAlMenu: () =>
           )}
         </div>
 
-        <div className="flex justify-center gap-6 mt-10 mb-10">
+        <div className="flex justify-center gap-6 mt-12 mb-12">
           <button 
             onClick={volverAlMenu} 
-            className="bg-slate-800 border border-slate-600 hover:bg-slate-700 hover:border-slate-500 px-8 py-3 rounded-xl text-slate-200 font-bold transition-all active:scale-95 shadow-lg shadow-slate-900/50"
+            className="bg-slate-800 border border-slate-600 hover:bg-slate-700 px-10 py-3 rounded-xl text-slate-200 font-bold transition-all active:scale-95"
           >
             Volver al Menú
           </button>
           
           <button 
             onClick={() => traerCompras(true)} 
-            className="bg-sky-600 hover:bg-sky-500 px-8 py-3 rounded-xl shadow-lg shadow-sky-900/50 duration-300 border border-sky-500/50 transition-all active:scale-95 text-white font-bold tracking-wide"
+            className="bg-sky-600 hover:bg-sky-500 px-10 py-3 rounded-xl shadow-lg active:scale-95 text-white font-bold uppercase tracking-widest"
           >
             Actualizar Cartera
           </button>

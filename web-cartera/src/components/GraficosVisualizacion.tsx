@@ -34,7 +34,7 @@ export default function GraficosVisualizacion({ volverAlMenu }: { volverAlMenu: 
         inversionTotal += inversion;
         
         const ticker = c.ticker.toUpperCase();
-        const sector = c.sector || "Otros";
+        const sector = (c.sector || "Otros").toUpperCase();
 
         datosPorTicker[ticker] = (datosPorTicker[ticker] || 0) + inversion;
         datosPorSector[sector] = (datosPorSector[sector] || 0) + inversion;
@@ -42,19 +42,26 @@ export default function GraficosVisualizacion({ volverAlMenu }: { volverAlMenu: 
 
     const paletaColores = [
         '#38bdf8', '#fbbf24', '#10b981', '#f87171', '#a78bfa', 
-        '#f472b6', '#2dd4bf', '#fb923c', '#e2e8f0', '#6366f1'
+        '#f472b6', '#2dd4bf', '#fb923c', '#e2e8f0', '#6366f1',
+        '#fcd34d', '#fda4af', '#5eead4', '#bae6fd', '#c4b5fd',
+        '#a3e635', '#f9a8d4', '#4ade80', '#fb7185', '#a5b4fc',
+        '#f97316', '#34d399', '#fca5a5', '#c084fc', '#e879f9',
+        '#818cf8', '#bef264', '#fecdd3', '#44ad99', '#f8fafc'
     ];
 
     const generarDataGrafico = (datos: { [key: string]: number }) => {
-        const labels = Object.keys(datos);
-        const values = Object.values(datos);
+        const itemsSorted = Object.entries(datos).sort((a, b) => b[1] - a[1]);
+        const labels = itemsSorted.map(item => item[0]);
+        const values = itemsSorted.map(item => item[1]);
+        
         return {
             labels,
             datasets: [{
                 data: values,
-                backgroundColor: paletaColores.slice(0, labels.length),
+                backgroundColor: labels.map((_, i) => paletaColores[i % paletaColores.length]),
                 borderColor: '#0f172a',
-                borderWidth: 4,
+                // ACÁ ESTÁ EL CAMBIO: Lo bajamos de 4 a 1 para que las porciones chicas respiren
+                borderWidth: 1, 
                 hoverOffset: 30
             }],
         };
